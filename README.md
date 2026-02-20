@@ -1,36 +1,173 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Payout Management Frontend
 
-## Getting Started
+A Next.js-based frontend application for managing vendor payouts with role-based access control (OPS and FINANCE roles).
 
-First, run the development server:
+## Quick Start (Under 5 Minutes)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Prerequisites
+- Node.js 18+ installed
+- Backend API running on `http://localhost:4000` (or configured URL)
+
+### Steps
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/rutvikpatel14/payout-management-frontend.git
+   cd payout-management-frontend
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   pnpm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.local.example .env.local
+   ```
+   Edit `.env.local` if your backend API is running on a different URL:
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:4000
+   ```
+
+4. **Start the development server**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   # or
+   pnpm dev
+   ```
+
+5. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+**Total time: ~3-5 minutes** (depending on npm install speed)
+
+## Environment Setup
+
+### Required Environment Variables
+
+Create a `.env.local` file in the root directory (or copy from `.env.local.example`):
+
+```env
+# Backend API URL (default: http://localhost:4000)
+NEXT_PUBLIC_API_URL=http://localhost:4000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment File Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Copy the example file:
+   ```bash
+   cp .env.local.example .env.local
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Update `NEXT_PUBLIC_API_URL` if your backend runs on a different port or domain.
 
-## Learn More
+3. **Note**: `.env.local` is gitignored and won't be committed to the repository.
 
-To learn more about Next.js, take a look at the following resources:
+## Seed Data Instructions
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This frontend application requires a backend API to function. Seed data must be set up on the **backend API**, not in this frontend repository.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Backend Requirements
 
-## Deploy on Vercel
+The backend API should provide:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Authentication Endpoint** (`POST /auth/login`)
+   - Accepts: `{ email: string, password: string }`
+   - Returns: `{ token: string, user: { id: string, email: string, role: 'OPS' | 'FINANCE' } }`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **At least one test user account**:
+   - **OPS Role User**: Can create payouts, submit for approval
+   - **FINANCE Role User**: Can approve/reject payouts
+
+3. **Vendors Endpoint** (`GET /vendors`, `POST /vendors`)
+   - Returns vendor list for payout creation
+
+4. **Payouts Endpoint** (`GET /payouts`, `POST /payouts`, etc.)
+   - Handles payout CRUD operations and workflow
+
+### Recommended Seed Data
+
+For testing purposes, the backend should include:
+
+**Test Users:**
+- Email: `ops@example.com`, Password: `password123`, Role: `OPS`
+- Email: `finance@example.com`, Password: `password123`, Role: `FINANCE`
+
+**Test Vendors:**
+- At least 2-3 vendors with UPI IDs or bank account details
+
+**Note**: Contact your backend team or refer to the backend repository's README for specific seed data setup instructions.
+
+## Available Scripts
+
+- `npm run dev` - Start development server (port 3000)
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+
+## Assumptions
+
+1. **Backend API is running**: The frontend expects a backend API server running on `http://localhost:4000` (or configured URL) with the following endpoints:
+   - `/auth/login` - Authentication
+   - `/vendors` - Vendor management
+   - `/payouts` - Payout management
+
+2. **Node.js version**: Requires Node.js 18 or higher.
+
+3. **Browser support**: Modern browsers with ES6+ support (Chrome, Firefox, Safari, Edge).
+
+4. **Backend CORS**: The backend API must allow CORS requests from `http://localhost:3000` during development.
+
+5. **Authentication**: Users must log in through the `/login` page. Authentication tokens are stored in localStorage.
+
+6. **Role-based access**: 
+   - OPS users can create and submit payouts
+   - FINANCE users can approve/reject payouts
+
+## Project Structure
+
+```
+payout-management-frontend/
+├── src/
+│   ├── app/              # Next.js app router pages
+│   ├── contexts/         # React contexts (Auth)
+│   ├── lib/              # Utilities (API client, validation)
+│   └── styles/           # Global styles
+├── .env.local.example    # Environment variables template
+├── package.json          # Dependencies and scripts
+└── README.md            # This file
+```
+
+## Troubleshooting
+
+**Port 3000 already in use?**
+```bash
+# Kill the process or use a different port
+PORT=3001 npm run dev
+```
+
+**Backend API not responding?**
+- Verify the backend is running on the configured URL
+- Check `NEXT_PUBLIC_API_URL` in `.env.local`
+- Ensure CORS is enabled on the backend for `http://localhost:3000`
+
+**Login not working?**
+- Verify backend authentication endpoint is accessible
+- Check browser console for API errors
+- Ensure backend has seed users created
+
+## Tech Stack
+
+- **Framework**: Next.js 16.1.6
+- **React**: 19.2.3
+- **TypeScript**: 5.x
+- **Styling**: Tailwind CSS 4
+- **Validation**: Zod 3.23.8
+
