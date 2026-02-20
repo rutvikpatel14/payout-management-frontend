@@ -25,7 +25,7 @@ export default function NewPayoutPage() {
       return;
     }
     if (!token) return;
-    api.getVendors(token).then((r) => {
+    api.getVendors(token).then((r:any) => {
       if (r.data) setVendors(r.data);
       if (r.data?.length) setVendorId(r.data[0]._id);
     });
@@ -59,7 +59,7 @@ export default function NewPayoutPage() {
     }
 
     setLoading(true);
-    const res = await api.createPayout(token!, {
+    const res:any = await api.createPayout(token!, {
       vendor_id: validation.data.vendor_id,
       amount: parseFloat(validation.data.amount),
       mode: validation.data.mode,

@@ -23,7 +23,7 @@ export default function PayoutDetailPage() {
     if (!token || !id) return;
     setLoading(true);
     setError(null);
-    const res = await api.getPayout(token, id);
+    const res:any = await api.getPayout(token, id);
     setLoading(false);
     if (res.error) {
       setError(res.message || res.error);
@@ -39,7 +39,7 @@ export default function PayoutDetailPage() {
   async function handleSubmit() {
     if (!token || !id || user?.role !== 'OPS') return;
     setActionLoading('submit');
-    const res = await api.submitPayout(token, id);
+    const res:any = await api.submitPayout(token, id);
     setActionLoading(null);
     if (res.error) {
       setError(res.message || res.error);
@@ -51,7 +51,7 @@ export default function PayoutDetailPage() {
   async function handleApprove() {
     if (!token || !id || user?.role !== 'FINANCE') return;
     setActionLoading('approve');
-    const res = await api.approvePayout(token, id);
+    const res:any = await api.approvePayout(token, id);
     setActionLoading(null);
     if (res.error) {
       setError(res.message || res.error);
@@ -65,7 +65,7 @@ export default function PayoutDetailPage() {
     
     setError(null);
     setActionLoading('reject');
-    const res = await api.rejectPayout(token, id, reason);
+    const res:any = await api.rejectPayout(token, id, reason);
     setActionLoading(null);
     if (res.error) {
       setError(res.message || res.error);

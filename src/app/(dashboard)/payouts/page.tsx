@@ -19,7 +19,7 @@ export default function PayoutsPage() {
     if (!token) return;
     setLoading(true);
     setError(null);
-    const res = await api.getPayouts(token, {
+    const res:any = await api.getPayouts(token, {
       ...(filterStatus && { status: filterStatus }),
       ...(filterVendor && { vendor_id: filterVendor }),
     });
@@ -34,7 +34,7 @@ export default function PayoutsPage() {
   useEffect(() => {
     if (!token) return;
     (async () => {
-      const vRes = await api.getVendors(token);
+      const vRes:any = await api.getVendors(token);
       if (vRes.data) setVendors(vRes.data);
     })();
   }, [token]);

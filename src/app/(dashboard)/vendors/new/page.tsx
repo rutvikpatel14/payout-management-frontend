@@ -44,7 +44,7 @@ export default function NewVendorPage() {
     }
 
     setLoading(true);
-    const res = await api.createVendor(token!, {
+    const res:any = await api.createVendor(token!, {
       name: validation.data.name,
       upi_id: validation.data.upi_id || undefined,
       bank_account: validation.data.bank_account || undefined,

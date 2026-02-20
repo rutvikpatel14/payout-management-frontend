@@ -16,7 +16,7 @@ export default function VendorsPage() {
     (async () => {
       setLoading(true);
       setError(null);
-      const res = await api.getVendors(token);
+      const res:any = await api.getVendors(token);
       setLoading(false);
       if (res.error) {
         setError(res.message || res.error);
