@@ -67,12 +67,32 @@ export const api = {
       r.data ? { data: r.data.data } : r
     ),
 
+  getVendor: (token: string, id: string) =>
+    request<{ data: Vendor[] }>('/vendors', { token }).then((r) => {
+      if (!r.data) return r;
+      const vendor = r.data.data.find((v) => v._id === id);
+      return vendor ? { data: vendor } : { error: 'Not found', message: 'Vendor not found' };
+    }),
+
   createVendor: (token: string, body: { name: string; upi_id?: string; bank_account?: string; ifsc?: string; is_active?: boolean }) =>
     request<{ data: Vendor }>('/vendors', {
       method: 'POST',
       body: JSON.stringify(body),
       token,
     }).then((r) => (r.data ? { data: r.data.data } : r)),
+
+  updateVendor: (token: string, id: string, body: { name?: string; upi_id?: string; bank_account?: string; ifsc?: string; is_active?: boolean }) =>
+    request<{ data: Vendor }>(`/vendors/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+      token,
+    }).then((r) => (r.data ? { data: r.data.data } : r)),
+
+  deleteVendor: (token: string, id: string) =>
+    request(`/vendors/${id}`, {
+      method: 'DELETE',
+      token,
+    }),
 
   getPayouts: (token: string, params?: { status?: string; vendor_id?: string }) => {
     const q = new URLSearchParams();

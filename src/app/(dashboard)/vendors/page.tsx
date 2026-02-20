@@ -10,21 +10,40 @@ export default function VendorsPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const fetchVendors = async () => {
+    if (!token) return;
+    setLoading(true);
+    setError(null);
+    const res: any = await api.getVendors(token);
+    setLoading(false);
+    if (res.error) {
+      setError(res.message || res.error);
+      return;
+    }
+    if (res.data) setVendors(res.data);
+  };
 
   useEffect(() => {
-    if (!token) return;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      const res:any = await api.getVendors(token);
-      setLoading(false);
-      if (res.error) {
-        setError(res.message || res.error);
-        return;
-      }
-      if (res.data) setVendors(res.data);
-    })();
+    fetchVendors();
   }, [token]);
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this vendor? This action cannot be undone.')) {
+      return;
+    }
+    setDeletingId(id);
+    setError(null);
+    const res: any = await api.deleteVendor(token!, id);
+    setDeletingId(null);
+    if (res.error) {
+      setError(res.message || res.error);
+      return;
+    }
+    // Refresh the vendors list
+    await fetchVendors();
+  };
 
   return (
     <div>
@@ -60,6 +79,7 @@ export default function VendorsPage() {
                 <th className="px-4 py-3 font-medium text-zinc-700">Bank account</th>
                 <th className="px-4 py-3 font-medium text-zinc-700">IFSC</th>
                 <th className="px-4 py-3 font-medium text-zinc-700">Active</th>
+                <th className="px-4 py-3 font-medium text-zinc-700">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -75,6 +95,23 @@ export default function VendorsPage() {
                     ) : (
                       <span className="text-zinc-400">No</span>
                     )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2">
+                      <Link
+                        href={`/vendors/${v._id}/edit`}
+                        className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(v._id)}
+                        disabled={deletingId === v._id}
+                        className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        {deletingId === v._id ? 'Deleting…' : 'Delete'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
