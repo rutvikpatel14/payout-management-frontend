@@ -1,31 +1,45 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { api, type Vendor } from '@/lib/api';
-import { payoutSchema, type PayoutFormData } from '@/lib/validation';
-import { useEffect, useState } from 'react';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { api, type Vendor } from "@/lib/api";
+import { payoutSchema, type PayoutFormData } from "@/lib/validation";
+import { useEffect, useState } from "react";
+import {
+  AlertCircle,
+  Building2,
+  ChevronLeft,
+  CreditCard,
+  IndianRupee,
+  MessageSquare,
+  Search,
+} from "lucide-react";
+import { cn } from "@/lib/cn";
+import { DropdownSelect } from "@/components/DropdownSelect";
+import { Input } from "@/components/ui/Input";
 
 export default function NewPayoutPage() {
   const router = useRouter();
   const { token, user } = useAuth();
   const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [vendor_id, setVendorId] = useState('');
-  const [amount, setAmount] = useState('');
-  const [mode, setMode] = useState<'UPI' | 'IMPS' | 'NEFT'>('UPI');
-  const [note, setNote] = useState('');
-  const [errors, setErrors] = useState<Partial<Record<keyof PayoutFormData, string>>>({});
+  const [vendor_id, setVendorId] = useState("");
+  const [amount, setAmount] = useState("");
+  const [mode, setMode] = useState<"UPI" | "IMPS" | "NEFT">("UPI");
+  const [note, setNote] = useState("");
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof PayoutFormData, string>>
+  >({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user?.role !== 'OPS') {
-      router.replace('/payouts');
+    if (user?.role !== "OPS") {
+      router.replace("/payouts");
       return;
     }
     if (!token) return;
-    api.getVendors(token).then((r:any) => {
+    api.getVendors(token).then((r) => {
       if (r.data) setVendors(r.data);
       if (r.data?.length) setVendorId(r.data[0]._id);
     });
@@ -49,7 +63,10 @@ export default function NewPayoutPage() {
         if (issue.path[0]) {
           const fieldName = issue.path[0] as keyof PayoutFormData;
           // Prioritize "required" messages over other validation errors
-          if (!fieldErrors[fieldName] || issue.message.toLowerCase().includes('required')) {
+          if (
+            !fieldErrors[fieldName] ||
+            issue.message.toLowerCase().includes("required")
+          ) {
             fieldErrors[fieldName] = issue.message;
           }
         }
@@ -59,11 +76,11 @@ export default function NewPayoutPage() {
     }
 
     setLoading(true);
-    const res:any = await api.createPayout(token!, {
+    const res = await api.createPayout(token!, {
       vendor_id: validation.data.vendor_id,
       amount: parseFloat(validation.data.amount),
       mode: validation.data.mode,
-      note: validation.data.note || '',
+      note: validation.data.note || "",
     });
     setLoading(false);
     if (res.error) {
@@ -73,152 +90,182 @@ export default function NewPayoutPage() {
     if (res.data) router.push(`/payouts/${res.data._id}`);
   }
 
-  if (user?.role !== 'OPS') return null;
+  if (user?.role !== "OPS") return null;
 
   return (
-    <div>
-      <div className="mb-6 flex items-center gap-4">
-        <Link href="/payouts" className="text-sm text-zinc-500 hover:text-zinc-700">
-          ← Payouts
-        </Link>
-        <h1 className="text-2xl font-semibold text-zinc-900">Create Payout</h1>
-      </div>
-
-      <form
-        onSubmit={handleSubmit}
-        className="max-w-md rounded-xl border border-zinc-200 bg-white p-6 shadow-sm"
+    <div className="space-y-3">
+      <Link
+        href="/payouts"
+        className="inline-flex items-center gap-2 text-gray-500 hover:text-black font-medium transition-colors"
       >
-        <div className="space-y-4">
+        <ChevronLeft className="w-5 h-5" />
+        Back to Payouts
+      </Link>
+
+      <div className="max-w-2xl">
+        <h2 className="text-2xl font-bold text-black tracking-tight">
+          Create Payout Request
+        </h2>
+
+        {error && (
+          <div
+            className="mt-4 bg-red-50 text-red-600 p-3 rounded-2xl flex items-center gap-3 text-sm"
+            role="alert"
+          >
+            <AlertCircle className="w-5 h-5" />
+            {error}
+          </div>
+        )}
+
+        <form
+          onSubmit={handleSubmit}
+          className="mt-6 space-y-6 bg-white rounded-3xl border border-black/5 shadow-sm p-6 md:p-8"
+        >
           <div>
-            <label htmlFor="vendor" className="mb-1 block text-sm font-medium text-zinc-700">
-              Vendor *
+            <label className="block text-xs font-semibold text-black uppercase tracking-wider mb-3 ml-1">
+              Select Vendor *
             </label>
-            <select
-              id="vendor"
-              value={vendor_id}
-              onChange={(e) => {
-                setVendorId(e.target.value);
-                if (errors.vendor_id) setErrors((prev) => ({ ...prev, vendor_id: undefined }));
-              }}
-              className={`w-full rounded-lg border px-3 py-2 text-zinc-900 ${
-                errors.vendor_id
-                  ? 'border-red-300 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500'
-                  : 'border-zinc-300 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
-              }`}
-            >
-              <option value="">Select vendor</option>
-              {vendors.map((v) => (
-                <option key={v._id} value={v._id}>
-                  {v.name}
-                </option>
-              ))}
-            </select>
+            <div className="flex-1 relative">
+              <DropdownSelect
+                value={vendor_id}
+                onChange={(next) => {
+                  setVendorId(next);
+                  if (errors.vendor_id)
+                    setErrors((prev) => ({ ...prev, vendor_id: undefined }));
+                }}
+                icon={<Search className="w-5 h-5" />}
+                placeholder="All Vendors"
+                menuActiveClassName="bg-blue-600 text-white"
+                options={[
+                  { value: "", label: "All Vendors" },
+                  ...vendors.map((v) => ({ value: v._id, label: v.name })),
+                ]}
+              />
+            </div>
             {errors.vendor_id && (
-              <p className="mt-1 text-xs text-red-600" role="alert">
+              <p
+                className="mt-2 ml-1 text-xs font-medium text-red-600"
+                role="alert"
+              >
                 {errors.vendor_id}
               </p>
             )}
           </div>
-          <div>
-            <label htmlFor="amount" className="mb-1 block text-sm font-medium text-zinc-700">
-              Amount (₹) *
-            </label>
-            <input
-              id="amount"
-              type="number"
-              step="0.01"
-              min="0.01"
-              value={amount}
-              onChange={(e) => {
-                setAmount(e.target.value);
-                if (errors.amount) setErrors((prev) => ({ ...prev, amount: undefined }));
-              }}
-              className={`w-full rounded-lg border px-3 py-2 text-zinc-900 ${
-                errors.amount
-                  ? 'border-red-300 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500'
-                  : 'border-zinc-300 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
-              }`}
-              placeholder="0.00"
-            />
-            {errors.amount && (
-              <p className="mt-1 text-xs text-red-600" role="alert">
-                {errors.amount}
-              </p>
-            )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-semibold text-black uppercase tracking-wider mb-3 ml-1">
+                Amount (₹) *
+              </label>
+              <div className="relative">
+                <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" />
+                <Input
+                  type="number"
+                  required
+                  min="0.01"
+                  step="0.01"
+                  value={amount}
+                  onChange={(e) => {
+                    setAmount(e.target.value);
+                    if (errors.amount)
+                      setErrors((prev) => ({ ...prev, amount: undefined }));
+                  }}
+                  className={cn(
+                    "pl-12 pr-4",
+                    errors.amount && "border-red-300 focus:border-red-500",
+                  )}
+                  placeholder="0.00"
+                />
+              </div>
+              {errors.amount && (
+                <p
+                  className="mt-2 ml-1 text-xs font-medium text-red-600"
+                  role="alert"
+                >
+                  {errors.amount}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-black uppercase tracking-wider mb-3 ml-1">
+                Payment Mode *
+              </label>
+              <DropdownSelect
+                value={mode}
+                onChange={(next) => {
+                  setMode(next as "UPI" | "IMPS" | "NEFT");
+                  if (errors.mode)
+                    setErrors((prev) => ({ ...prev, mode: undefined }));
+                }}
+                icon={<CreditCard className="w-5 h-5" />}
+                placeholder="Select payment mode"
+                menuActiveClassName="bg-blue-600 text-white"
+                options={[
+                  { value: "UPI", label: "UPI" },
+                  { value: "IMPS", label: "IMPS" },
+                  { value: "NEFT", label: "NEFT" },
+                ]}
+              />
+              {errors.mode && (
+                <p
+                  className="mt-2 ml-1 text-xs font-medium text-red-600"
+                  role="alert"
+                >
+                  {errors.mode}
+                </p>
+              )}
+            </div>
           </div>
+
           <div>
-            <label htmlFor="mode" className="mb-1 block text-sm font-medium text-zinc-700">
-              Mode *
+            <label className="block text-xs font-semibold text-black uppercase tracking-wider mb-3 ml-1">
+              Note (Optional)
             </label>
-            <select
-              id="mode"
-              value={mode}
-              onChange={(e) => {
-                setMode(e.target.value as 'UPI' | 'IMPS' | 'NEFT');
-                if (errors.mode) setErrors((prev) => ({ ...prev, mode: undefined }));
-              }}
-              className={`w-full rounded-lg border px-3 py-2 text-zinc-900 ${
-                errors.mode
-                  ? 'border-red-300 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500'
-                  : 'border-zinc-300 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
-              }`}
-            >
-              <option value="UPI">UPI</option>
-              <option value="IMPS">IMPS</option>
-              <option value="NEFT">NEFT</option>
-            </select>
-            {errors.mode && (
-              <p className="mt-1 text-xs text-red-600" role="alert">
-                {errors.mode}
-              </p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="note" className="mb-1 block text-sm font-medium text-zinc-700">
-              Note (optional)
-            </label>
-            <textarea
-              id="note"
-              value={note}
-              onChange={(e) => {
-                setNote(e.target.value);
-                if (errors.note) setErrors((prev) => ({ ...prev, note: undefined }));
-              }}
-              rows={2}
-              className={`w-full rounded-lg border px-3 py-2 text-zinc-900 ${
-                errors.note
-                  ? 'border-red-300 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500'
-                  : 'border-zinc-300 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
-              }`}
-            />
+            <div className="relative">
+              <MessageSquare className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
+              <textarea
+                value={note}
+                onChange={(e) => {
+                  setNote(e.target.value);
+                  if (errors.note)
+                    setErrors((prev) => ({ ...prev, note: undefined }));
+                }}
+                rows={3}
+                className={cn(
+                  "w-full bg-gray-50 border border-transparent focus:border-black focus:bg-white rounded-2xl py-4 pl-12 pr-4 outline-none transition-all text-black placeholder:text-gray-400",
+                  errors.note && "border-red-300 focus:border-red-500",
+                )}
+                placeholder="Add any specific instructions or context..."
+              />
+            </div>
             {errors.note && (
-              <p className="mt-1 text-xs text-red-600" role="alert">
+              <p
+                className="mt-2 ml-1 text-xs font-medium text-red-600"
+                role="alert"
+              >
                 {errors.note}
               </p>
             )}
           </div>
-        </div>
-        {error && (
-          <div className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
-            {error}
+
+          <div className="pt-2 flex flex-col md:flex-row gap-3">
+            <Link
+              href="/payouts"
+              className="md:w-1/2 inline-flex items-center justify-center px-4 py-4 rounded-2xl font-semibold text-gray-700 border border-gray-200 hover:bg-gray-100 transition-colors"
+            >
+              Cancel
+            </Link>
+            <button
+              type="submit"
+              disabled={loading}
+              className="md:w-1/2 inline-flex items-center justify-center bg-black text-white font-bold py-4 rounded-2xl hover:bg-gray-800 transition-all shadow-md shadow-black/10 disabled:opacity-50 active:scale-[0.98]"
+            >
+              {loading ? "Creating..." : "Create Payout"}
+            </button>
           </div>
-        )}
-        <div className="mt-6 flex gap-3">
-          <button
-            type="submit"
-            disabled={loading}
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
-          >
-            {loading ? 'Creating…' : 'Create (Draft)'}
-          </button>
-          <Link
-            href="/payouts"
-            className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
-          >
-            Cancel
-          </Link>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

@@ -4,6 +4,9 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { loginSchema, type LoginFormData } from '@/lib/validation';
+import { AlertCircle, CreditCard, Lock, Mail } from 'lucide-react';
+import { cn } from '@/lib/cn';
+import { Input } from '@/components/ui/Input';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,6 +19,7 @@ export default function LoginPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -55,82 +59,120 @@ export default function LoginPage() {
 
   if (!mounted) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-100">
-        <p className="text-zinc-500">Loading…</p>
+      <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-black border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-medium text-gray-500 uppercase tracking-widest">
+            Initializing...
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-100 p-4">
-      <div className="w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <h1 className="mb-6 text-xl font-semibold text-zinc-900">Payout Portal — Login</h1>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium text-zinc-700">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
-              }}
-              className={`w-full rounded-lg border px-3 py-2 text-zinc-900 focus:outline-none focus:ring-1 ${
-                errors.email
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                  : 'border-zinc-300 focus:border-blue-500 focus:ring-blue-500'
-              }`}
-              placeholder="ops@demo.com"
-            />
-            {errors.email && (
-              <p className="mt-1 text-xs text-red-600" role="alert">
-                {errors.email}
-              </p>
-            )}
-          </div>
-          <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium text-zinc-700">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
-              }}
-              className={`w-full rounded-lg border px-3 py-2 text-zinc-900 focus:outline-none focus:ring-1 ${
-                errors.password
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                  : 'border-zinc-300 focus:border-blue-500 focus:ring-blue-500'
-              }`}
-            />
-            {errors.password && (
-              <p className="mt-1 text-xs text-red-600" role="alert">
-                {errors.password}
-              </p>
-            )}
-          </div>
-          {error && (
-            <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
-              {error}
+    <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-4xl shadow-sm border border-black/5 p-10">
+          <div className="flex flex-col items-center mb-10">
+            <div className="w-16 h-16 bg-black rounded-2xl flex items-center justify-center mb-6 shadow-lg">
+              <CreditCard className="w-8 h-8 text-white" />
             </div>
-          )}
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-2 rounded-lg bg-zinc-900 px-4 py-2.5 font-medium text-white hover:bg-zinc-800 disabled:opacity-50"
-          >
-            {loading ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
-        <p className="mt-4 text-center text-xs text-zinc-500">
-          Demo: ops@demo.com / ops123 (OPS) · finance@demo.com / fin123 (FINANCE)
-        </p>
+            <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
+            <p className="text-gray-500 mt-2">Sign in to manage vendor payouts</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 text-red-600 p-4 rounded-2xl flex items-center gap-3 text-sm">
+                <AlertCircle className="w-5 h-5" />
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ml-1">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+                  }}
+                  className={cn(
+                    'pl-12 pr-4',
+                    errors.email && 'border-red-300 focus:border-red-500'
+                  )}
+                  placeholder="ops@demo.com"
+                />
+              </div>
+              {errors.email && (
+                <p className="mt-2 ml-1 text-xs font-medium text-red-600" role="alert">
+                  {errors.email}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ml-1">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+                  }}
+                  className={cn(
+                    'pl-12 pr-4',
+                    errors.password && 'border-red-300 focus:border-red-500'
+                  )}
+                  placeholder="••••••••"
+                />
+              </div>
+              {errors.password && (
+                <p className="mt-2 ml-1 text-xs font-medium text-red-600" role="alert">
+                  {errors.password}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-black text-white font-bold py-4 rounded-2xl hover:bg-gray-800 transition-all disabled:opacity-50 shadow-lg shadow-black/10 active:scale-[0.98]"
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+
+          <div className="mt-8 pt-8 border-t border-black/5 text-center">
+            <p className="text-xs text-gray-400 font-medium uppercase tracking-widest">
+              Demo Credentials
+            </p>
+            <div className="mt-4 grid grid-cols-2 gap-4 text-xs">
+              <div className="bg-gray-50 p-3 rounded-xl">
+                <p className="font-bold text-gray-900">OPS</p>
+                <p className="text-gray-500">ops@demo.com</p>
+                <p className="text-gray-500">ops123</p>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-xl">
+                <p className="font-bold text-gray-900">FINANCE</p>
+                <p className="text-gray-500">finance@demo.com</p>
+                <p className="text-gray-500">fin123</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

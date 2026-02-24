@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { rejectPayoutSchema } from '@/lib/validation';
+import { AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/cn';
 
 type RejectPayoutModalProps = {
   isOpen: boolean;
@@ -46,25 +48,26 @@ export default function RejectPayoutModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-60 flex items-center justify-center px-4 py-6 bg-black/40 backdrop-blur-sm"
       onClick={handleClose}
     >
       <div
-        className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-6 shadow-lg"
+        className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 md:p-8"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="mb-4 text-xl font-semibold text-zinc-900">Reject Payout</h2>
-        <p className="mb-4 text-sm text-zinc-600">
-          Please provide a reason for rejecting this payout. This reason will be recorded in the audit trail.
+        <h3 className="text-lg font-bold text-gray-900 tracking-tight mb-2">
+          Reject Payout Request
+        </h3>
+        <p className="text-sm text-gray-500 mb-5">
+          Please provide a reason for rejecting this payout. This will be visible to the OPS team.
         </p>
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="reject-reason" className="mb-1 block text-sm font-medium text-zinc-700">
-              Rejection Reason *
-            </label>
+          <div className="mb-6">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ml-0.5">
+              Rejection Reason
+            </p>
             <textarea
-              id="reject-reason"
               value={reason}
               onChange={(e) => {
                 setReason(e.target.value);
@@ -72,36 +75,37 @@ export default function RejectPayoutModal({
               }}
               rows={4}
               disabled={isLoading}
-              className={`w-full rounded-lg border px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-1 ${
-                error
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                  : 'border-zinc-300 focus:border-blue-500 focus:ring-blue-500'
-              } ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
-              placeholder="Enter the reason for rejection..."
+              className={cn(
+                'w-full bg-gray-50 border border-black/5 focus:border-red-500 focus:bg-white rounded-2xl py-3 px-4 outline-none transition-all mb-2 text-black placeholder:text-gray-400',
+                error && 'border-red-300',
+                isLoading && 'cursor-not-allowed opacity-50'
+              )}
+              placeholder="e.g., Incorrect bank details, Missing invoice..."
               required
             />
             {error && (
-              <p className="mt-1 text-xs text-red-600" role="alert">
-                {error}
-              </p>
+              <div className="text-sm text-red-600 flex items-center gap-2" role="alert">
+                <AlertCircle className="w-4 h-4" />
+                <span className="font-medium">{error}</span>
+              </div>
             )}
           </div>
 
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={isLoading || !reason.trim()}
-              className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? 'Rejecting…' : 'Confirm Rejection'}
-            </button>
+          <div className="flex flex-col md:flex-row gap-3 pt-1">
             <button
               type="button"
               onClick={handleClose}
               disabled={isLoading}
-              className="rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="md:flex-1 px-4 py-3 rounded-2xl font-semibold text-gray-700 border border-gray-200 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading || !reason.trim()}
+              className="md:flex-1 bg-red-500 text-white px-4 py-3 rounded-2xl font-bold hover:bg-red-600 transition-all shadow-md shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? 'Rejecting...' : 'Confirm Reject'}
             </button>
           </div>
         </form>

@@ -2,6 +2,8 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export type User = { id: string; email: string; role: 'OPS' | 'FINANCE' };
 
+export type ApiResult<T> = { data?: T; error?: string; message?: string };
+
 export type Vendor = {
   _id: string;
   name: string;
@@ -39,7 +41,7 @@ type ApiError = { error: string; message?: string };
 async function request<T>(
   path: string,
   options: RequestInit & { token?: string } = {}
-): Promise<{ data?: T; error?: string; message?: string }> {
+): Promise<ApiResult<T>> {
   const { token, ...init } = options;
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -55,6 +57,10 @@ async function request<T>(
   return { data: body as T };
 }
 
+function errorResult<T>(res: ApiResult<unknown>): ApiResult<T> {
+  return { error: res.error || 'Error', message: res.message };
+}
+
 export const api = {
   login: (email: string, password: string) =>
     request<{ token: string; user: User }>('/auth/login', {
@@ -62,77 +68,115 @@ export const api = {
       body: JSON.stringify({ email, password }),
     }),
 
-  getVendors: (token: string) =>
-    request<{ data: Vendor[] }>('/vendors', { token }).then((r) =>
-      r.data ? { data: r.data.data } : r
-    ),
+  getVendors: async (token: string): Promise<ApiResult<Vendor[]>> => {
+    const res = await request<{ data: Vendor[] }>('/vendors', { token });
+    if (res.error) return errorResult(res);
+    return { data: res.data?.data ?? [] };
+  },
 
-  getVendor: (token: string, id: string) =>
-    request<{ data: Vendor[] }>('/vendors', { token }).then((r) => {
-      if (!r.data) return r;
-      const vendor = r.data.data.find((v) => v._id === id);
-      return vendor ? { data: vendor } : { error: 'Not found', message: 'Vendor not found' };
-    }),
+  getVendor: async (token: string, id: string): Promise<ApiResult<Vendor>> => {
+    const res = await request<{ data: Vendor[] }>('/vendors', { token });
+    if (res.error) return errorResult(res);
+    const vendor = res.data?.data?.find((v) => v._id === id);
+    return vendor ? { data: vendor } : { error: 'Not found', message: 'Vendor not found' };
+  },
 
-  createVendor: (token: string, body: { name: string; upi_id?: string; bank_account?: string; ifsc?: string; is_active?: boolean }) =>
-    request<{ data: Vendor }>('/vendors', {
+  createVendor: async (
+    token: string,
+    body: { name: string; upi_id?: string; bank_account?: string; ifsc?: string; is_active?: boolean }
+  ): Promise<ApiResult<Vendor>> => {
+    const res = await request<{ data: Vendor }>('/vendors', {
       method: 'POST',
       body: JSON.stringify(body),
       token,
-    }).then((r) => (r.data ? { data: r.data.data } : r)),
+    });
+    if (res.error) return errorResult(res);
+    return { data: res.data?.data };
+  },
 
-  updateVendor: (token: string, id: string, body: { name?: string; upi_id?: string; bank_account?: string; ifsc?: string; is_active?: boolean }) =>
-    request<{ data: Vendor }>(`/vendors/${id}`, {
+  updateVendor: async (
+    token: string,
+    id: string,
+    body: { name?: string; upi_id?: string; bank_account?: string; ifsc?: string; is_active?: boolean }
+  ): Promise<ApiResult<Vendor>> => {
+    const res = await request<{ data: Vendor }>(`/vendors/${id}`, {
       method: 'PUT',
       body: JSON.stringify(body),
       token,
-    }).then((r) => (r.data ? { data: r.data.data } : r)),
+    });
+    if (res.error) return errorResult(res);
+    return { data: res.data?.data };
+  },
 
-  deleteVendor: (token: string, id: string) =>
-    request(`/vendors/${id}`, {
+  deleteVendor: async (token: string, id: string): Promise<ApiResult<unknown>> =>
+    request<unknown>(`/vendors/${id}`, {
       method: 'DELETE',
       token,
     }),
 
-  getPayouts: (token: string, params?: { status?: string; vendor_id?: string }) => {
+  getPayouts: async (
+    token: string,
+    params?: { status?: string; vendor_id?: string }
+  ): Promise<ApiResult<Payout[]>> => {
     const q = new URLSearchParams();
     if (params?.status) q.set('status', params.status);
     if (params?.vendor_id) q.set('vendor_id', params.vendor_id);
     const query = q.toString() ? `?${q.toString()}` : '';
-    return request<{ data: Payout[] }>(`/payouts${query}`, { token }).then((r) =>
-      r.data ? { data: r.data.data } : r
-    );
+    const res = await request<{ data: Payout[] }>(`/payouts${query}`, { token });
+    if (res.error) return errorResult(res);
+    return { data: res.data?.data ?? [] };
   },
 
-  getPayout: (token: string, id: string) =>
-    request<{ data: Payout & { audit?: PayoutAuditEntry[] } }>(`/payouts/${id}`, { token }).then(
-      (r) => (r.data ? { data: r.data.data } : r)
-    ),
+  getPayout: async (
+    token: string,
+    id: string
+  ): Promise<ApiResult<Payout & { audit?: PayoutAuditEntry[] }>> => {
+    const res = await request<{ data: Payout & { audit?: PayoutAuditEntry[] } }>(`/payouts/${id}`, {
+      token,
+    });
+    if (res.error) return errorResult(res);
+    return { data: res.data?.data };
+  },
 
-  createPayout: (
+  createPayout: async (
     token: string,
     body: { vendor_id: string; amount: number; mode: 'UPI' | 'IMPS' | 'NEFT'; note?: string }
-  ) =>
-    request<{ data: Payout }>('/payouts', {
+  ): Promise<ApiResult<Payout>> => {
+    const res = await request<{ data: Payout }>('/payouts', {
       method: 'POST',
       body: JSON.stringify(body),
       token,
-    }).then((r) => (r.data ? { data: r.data.data } : r)),
+    });
+    if (res.error) return errorResult(res);
+    return { data: res.data?.data };
+  },
 
-  submitPayout: (token: string, id: string) =>
-    request<{ data: Payout }>(`/payouts/${id}/submit`, { method: 'POST', token }).then((r) =>
-      r.data ? { data: r.data.data } : r
-    ),
+  submitPayout: async (token: string, id: string): Promise<ApiResult<Payout>> => {
+    const res = await request<{ data: Payout }>(`/payouts/${id}/submit`, { method: 'POST', token });
+    if (res.error) return errorResult(res);
+    return { data: res.data?.data };
+  },
 
-  approvePayout: (token: string, id: string) =>
-    request<{ data: Payout }>(`/payouts/${id}/approve`, { method: 'POST', token }).then((r) =>
-      r.data ? { data: r.data.data } : r
-    ),
+  approvePayout: async (token: string, id: string): Promise<ApiResult<Payout>> => {
+    const res = await request<{ data: Payout }>(`/payouts/${id}/approve`, {
+      method: 'POST',
+      token,
+    });
+    if (res.error) return errorResult(res);
+    return { data: res.data?.data };
+  },
 
-  rejectPayout: (token: string, id: string, decision_reason: string) =>
-    request<{ data: Payout }>(`/payouts/${id}/reject`, {
+  rejectPayout: async (
+    token: string,
+    id: string,
+    decision_reason: string
+  ): Promise<ApiResult<Payout>> => {
+    const res = await request<{ data: Payout }>(`/payouts/${id}/reject`, {
       method: 'POST',
       body: JSON.stringify({ decision_reason }),
       token,
-    }).then((r) => (r.data ? { data: r.data.data } : r)),
+    });
+    if (res.error) return errorResult(res);
+    return { data: res.data?.data };
+  },
 };
